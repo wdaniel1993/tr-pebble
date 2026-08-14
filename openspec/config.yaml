@@ -1,0 +1,11 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Tech stack: C (Pebble SDK 4.x), watchface/app for Pebble smartwatches
+  Toolchain: pebble tool v5.0.39, SDK 4.18, arm-none-eabi GCC (xPack 14.2.1),
+  qemu-pebble emulator for testing
+  Repo: tr-pebble
+
+# Per-artifact rules (optional)
