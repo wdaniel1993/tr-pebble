@@ -69,6 +69,7 @@ All TR wire logic lives in one ES5 module (`tr_api.js`): endpoint constants, log
 - First run: watch shows "Log in — press select". JS posts phone + PIN (stored in app-scoped `localStorage`), polls `GET /api/v2/auth/web/login/processes/{processId}` until `CONFIRMED`, captures `tr_session` + `tr_refresh`, stores them.
 - Subsequent runs: validate session over WS; on 401/403 refresh via `/api/v1/auth/web/session`; only if refresh fails, re-run login (push confirm again).
 - PIN storage accepted: `localStorage` is scoped per app in the sandbox; PIN is only used at login time and can be cleared via a config page (escape hatch).
+- **Config page is hosted on GitHub Pages** (`https://wdaniel1993.github.io/tr-pebble/`, served from `docs/index.html`, same pattern as Pebblegram and Lionel). The Pebble/Rebble app's webview requires a real https URL — the earlier data-URI approach did not open reliably on device. `package.json` also declares `capabilities: ["configurable"]` so the Pebble app shows the settings gear and fires `showConfiguration`. The page reads prefill (`phone`, `demo`) from the query string and closes via `pebblejs://close#<json>` (real app) or `return_to` (pypkjs emulator).
 
 ### 4. Data messages
 - Total + interval deltas: `portfolioAggregateHistory` (absolute EUR series → last point + deltas) and/or `userPortfolioChartModifiedDietz` (ranges `1d|5d|1m|1y|max`, percentage-based, Dietz-adjusted — mirrors the TR app's performance view).
