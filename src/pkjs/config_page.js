@@ -42,8 +42,8 @@
     '<form id="f">' +
     '<label for="phone">Phone number (international, e.g. +491234567890)</label>' +
     '<input id="phone" type="tel" inputmode="tel" placeholder="+49..." autocomplete="off">' +
-    '<label for="pin">PIN (5 digits)</label>' +
-    '<input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off">' +
+    '<label for="pin">PIN (your Trade Republic account PIN)</label>' +
+    '<input id="pin" type="password" inputmode="numeric" maxlength="10" autocomplete="off">' +
     '<div class="toggle"><label><input id="demo" type="checkbox"> Demo mode (mock data, no network)</label></div>' +
     '<button type="submit" id="save">Save</button>' +
     '<button type="button" class="secondary" id="clear">Clear credentials &amp; session</button>' +
