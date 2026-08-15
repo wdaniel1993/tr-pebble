@@ -2,7 +2,42 @@
 
 Trade Republic's old JSON REST API (`app.trade-republic.de`) no longer resolves. The current API (`api.traderepublic.com`) uses a plain-WebSocket data protocol (`connect`/`sub`/`unsub` text frames) authenticated by a `tr_session` cookie obtained through a web-login flow: `POST /api/v2/auth/web/login` with phone + PIN, then polling the process status until the user confirms the login push notification in the Trade Republic phone app (no code entry required). Sessions are refreshable via `POST /api/v1/auth/web/session`. Community SDKs (erim32 `trade-republic` Python, NightOwl07 `trade-republic-api` TypeScript) prove the flow works with plain HTTP + WebSocket; one of them connects to the WebSocket with **no cookies**, passing the session token inside each `sub` payload.
 
-The target hardware is Pebble Time 2 (`emery`, 200×228) and Pebble Time Round (`chalk`, 180×180 round). Neither watch has WiFi: all network access goes through the phone's Rebble Android app, whose PebbleKit JS sandbox (`pebble-js-app.js`, shipped inside the .pbw) provides `XMLHttpRequest`, `WebSocket` (documented; unverified in practice), and `localStorage`. The sandbox runs only while the watchapp is open. This repo has Pebble SDK 4.18 + pebble tool v5.0.39 + qemu-pebble installed.
+The target hardware is Pebble Time 2 (`emery`, 200×228 rectangular) and Pebble Round 2 (`gabbro`, 260×260 round). Neither watch has WiFi: all network access goes through the phone's Rebble Android app, whose PebbleKit JS sandbox (`pebble-js-app.js`, shipped inside the .pbw) provides `XMLHttpRequest`, `WebSocket`, and `localStorage` (both network APIs verified against the live TR endpoint from the sandbox — see Spike Findings). The sandbox runs only while the watchapp is open. This repo has Pebble SDK 4.18 + pebble tool v5.0.39 + qemu-pebble installed.
+
+## Spike Findings (tasks 1.1–1.4 progress)
+
+Verified from the real PebbleKit JS sandbox (pypkjs emulator) against the live
+Trade Republic API — no physical device needed for these checks:
+
+- **v2 login XHR works without a WAF token.** `POST /api/v2/auth/web/login`
+  with `{phoneNumber, pin}` and headers
+  `X-TR-Device-Info` (base64 JSON: `stableDeviceId`, `browser`, `browserVersion`,
+  `os`, `osVersion`, `timezone`, `timezoneOffset`, `screen`, `preferredLanguages`,
+  `numberOfCores`), `X-TR-App-Version: 2.2631.13`, `X-Tr-Platform: web-pro`,
+  `Accept-Language: en` passes header validation (previously suspected
+  `MISSING_REQUIRED_HEADER` did NOT occur). Invalid credentials return
+  `400 {"errors":[{"errorCode":"NUMBER_INVALID","errorMessage":"phoneNumber","meta":null}]}`
+  — proving the request reached credential validation.
+- **WebSocket protocol works from the sandbox.** `wss://api.traderepublic.com`,
+  `connect 31 {"locale":"en","platformId":"webtrading","platformVersion":"chrome - 94.0.4606","clientId":"app.traderepublic.com","clientVersion":"5582"}`
+  → `connected`. `sub N {"type":"availableCash","token":<session>}` with an
+  invalid session returns `1 E {"errors":[{"errorCode":"AUTHENTICATION_ERROR",...}]}`;
+  frames are `N A|D|C|E <payload>` with tab-separated delta ops (`=n` copy, `-n`
+  skip, `+text` insert). Cookie-less handshake + token-in-sub-payload confirmed
+  as the design's chosen approach.
+- **Still to capture with a real account (task 1.4):** exact response shapes of
+  `portfolioAggregateHistory` and `userPortfolioChartModifiedDietz` with a valid
+  session. The parsers in `tr_api.js` handle every shape seen in the wild and
+  log raw frames (`TRApi.setDebug(true)`) so the shapes can be recorded verbatim
+  on the phone during the hardware spike.
+- **Emulator quirk (RESOLVED):** the SDK 4.18 qemu app-install path fails on
+  the new cortex-m33 boards (`pebble-emery`/`pebble-gabbro` — SDK 4.18 firmware
+  v4.17.0 never answers `AppRunStateStart` with `AppFetchRequest`), while
+  `pebble-s4-bb` (chalk) and `pebble-flint` still install. Fix: install SDK
+  4.33.1 alongside (`pebble sdk install 4.33.1`) and run emulator commands with
+  `--sdk 4.33.1` (its firmware v4.33.2 installs apps correctly). Verified:
+  TR Portfolio installs and renders on emery (200×228 rect) and gabbro
+  (260×260 round) qemu with the mock payload injector, all UI states covered.
 
 ## Goals / Non-Goals
 
@@ -44,7 +79,7 @@ All TR wire logic lives in one ES5 module (`tr_api.js`): endpoint constants, log
 Single overview screen: total value large, interval list below (name + abs + %), scroll with up/down (round: fewer visible rows), select = refresh, long-press back = re-login. `PBL_ROUND`/`PBL_RECT` layout branches. AppMessage keys declared in `package.json` (`messageKeys`) and shared with C via `MESSAGE_KEY_*`. Loading (spinner/clock), error (retry), and "log in" states.
 
 ### 6. Build & test
-Dev loop: `pebble build` → install on qemu (chalk + emery) for UI; protocol spike validated against real TR API from the phone. Sandbox-only behavior (WebSocket, headers) requires the physical phone/watch.
+Dev loop: `pebble build` → install on qemu (emery + gabbro) for UI; protocol spike validated against real TR API from the phone. Sandbox-only behavior (WebSocket, headers) requires the physical phone/watch.
 
 ## Risks / Trade-offs
 
@@ -62,8 +97,8 @@ Green-field change in this repo (no existing code). Rollback = not shipping the 
 
 ## Open Questions
 
-- Exact login request headers (probe returned `MISSING_REQUIRED_HEADER` — likely `x-tr-device-info`; resolve by running the proven Python SDK or capturing the web app's requests).
-- Whether the WS handshake needs the `tr_session` Cookie header (erim32 connects without it — verify on the phone).
+- ~~Exact login request headers~~ **Resolved (spike 1.3 pre-check):** `X-TR-Device-Info` (base64 device JSON), `X-TR-App-Version`, `X-Tr-Platform`, `Accept-Language` work without a WAF token (see Spike Findings).
+- ~~WS handshake cookie~~ **Resolved:** cookie-less handshake with `token` inside each `sub` payload works (see Spike Findings).
 - `userPortfolioChartModifiedDietz` response shape (spike).
 - Interval set: use API ranges `1d/5d/1m/1y/max` or present as 1D/1W/1M/1Y/MAX (map `5d`→1W).
 - Currency: default EUR; read account currency from `cash` response.

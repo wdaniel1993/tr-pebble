@@ -253,7 +253,7 @@ require('./mock.js');
   // The config page is hosted on GitHub Pages (same pattern as Pebblegram and
   // Lionel): the Pebble/Rebble app's webview opens a real https URL, which the
   // embedded data: URI approach does not reliably support.
-  var CONFIG_PAGE_URL = 'https://wdaniel1993.github.io/tr-pebble/config/index.html';
+  var CONFIG_PAGE_URL = 'https://wdaniel1993.github.io/tr-pebble/';
 
   Pebble.addEventListener('showConfiguration', function () {
     var params = [];

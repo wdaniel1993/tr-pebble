@@ -4,7 +4,7 @@ A Pebble watchapp that shows the user's Trade Republic portfolio (total value + 
 
 ## What Changes
 
-- New Pebble watchapp (C + `pebble-js-app.js`) targeting Pebble Time 2 (`emery`, 200×228) and Pebble Time Round (`chalk`, 180×180 round), built with Pebble SDK 4.18.
+- New Pebble watchapp (C + `pebble-js-app.js`) targeting Pebble Time 2 (`emery`, 200×228 rectangular) and Pebble Round 2 (`gabbro`, 260×260 round), built with Pebble SDK 4.18.
 - The `pebble-js-app.js` sandbox talks to the unofficial Trade Republic web API directly:
   - Login via `POST /api/v2/auth/web/login` (phone + PIN) + push-confirmation polling (user taps "confirm" in the TR app on their phone) — no code entry on the watch.
   - Session (`tr_session` cookie, `tr_refresh`) persisted in sandbox `localStorage`; refresh via `/api/v1/auth/web/session` when expired; re-login fallback.
