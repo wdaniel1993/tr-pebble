@@ -1,0 +1,43 @@
+{
+  "name": "tr-portfolio-watch",
+  "author": "tr-pebble",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-app"
+  ],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "TR Portfolio",
+    "uuid": "c87d2c23-d79f-4625-8091-862a4f727bf0",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery",
+      "gabbro"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "capabilities": [
+      "configurable"
+    ],
+    "messageKeys": [
+      "CMD",
+      "STATE",
+      "TOTAL",
+      "CASH",
+      "CURRENCY",
+      "INTERVAL_IDX",
+      "INTERVAL_NAME",
+      "INTERVAL_ABS",
+      "INTERVAL_PCT",
+      "DONE",
+      "ERROR_MSG",
+      "VERSION"
+    ],
+    "resources": {
+      "media": []
+    }
+  }
+}

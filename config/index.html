@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TR Portfolio — Settings</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0; background: #0f172a; color: #e2e8f0; line-height: 1.45;
+  }
+  main { max-width: 560px; margin: 0 auto; padding: 18px 16px 36px; }
+  h1 { font-size: 22px; margin: 6px 0 2px; }
+  .lede { color: #94a3b8; font-size: 14px; margin: 4px 0 14px; }
+  section {
+    background: #1e293b; border: 1px solid #334155; border-radius: 10px;
+    padding: 14px; margin-bottom: 14px;
+  }
+  section h2 { font-size: 15px; margin: 0 0 10px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
+  input {
+    width: 100%; border: 1px solid #475569; border-radius: 6px; padding: 11px;
+    font: inherit; background: #0f172a; color: #e2e8f0;
+  }
+  button {
+    width: 100%; border: 0; border-radius: 6px; background: #1683d8; color: #fff;
+    padding: 13px; font: inherit; font-weight: 700; margin-top: 12px;
+  }
+  button.secondary { background: #475569; color: #e2e8f0; }
+  button.danger { background: #b91c1c; }
+  .toggle { margin-top: 12px; font-size: 14px; }
+  .toggle input { width: auto; margin-right: 6px; vertical-align: middle; }
+  .status { margin-top: 10px; font-size: 13px; color: #4ade80; min-height: 18px; font-weight: 600; }
+  .status.err { color: #f87171; }
+</style>
+</head>
+<body>
+<main>
+  <h1>TR Portfolio</h1>
+  <p class="lede">Enter your Trade Republic phone number and PIN. They are stored only on this
+  phone (app sandbox) and are used only to log in. You confirm the login with a push in the
+  Trade Republic app.</p>
+
+  <section>
+    <h2>Account</h2>
+    <label for="phone">Phone number (international, e.g. +491234567890)</label>
+    <input id="phone" type="tel" inputmode="tel" placeholder="+49..." autocomplete="off">
+    <label for="pin">PIN (5 digits)</label>
+    <input id="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off">
+    <button id="save">Save</button>
+    <div class="status" id="status"></div>
+  </section>
+
+  <section>
+    <h2>Options</h2>
+    <div class="toggle"><label><input id="demo" type="checkbox"> Demo mode (mock data, no network)</label></div>
+    <button class="secondary" id="save2">Save settings</button>
+  </section>
+
+  <section>
+    <h2>Danger zone</h2>
+    <button class="danger" id="clear">Clear credentials &amp; session</button>
+  </section>
+</main>
+<script>
+(function () {
+  var qs = {};
+  window.location.search.replace(/[?&]([^=&]+)=([^&]*)/g, function (_, k, v) { qs[k] = decodeURIComponent(v); });
+  window.location.hash.replace(/[?&]?#?([^=&]+)=([^&]*)/g, function (_, k, v) { if (!(k in qs)) qs[k] = decodeURIComponent(v); });
+  var returnTo = qs.return_to || 'pebblejs://close#';
+
+  var phone = document.getElementById('phone');
+  var pin = document.getElementById('pin');
+  var demo = document.getElementById('demo');
+  var status = document.getElementById('status');
+
+  if (qs.phone) phone.value = qs.phone;
+  if (qs.demo === '1' || qs.demo === 'true') demo.checked = true;
+
+  function closeWith(options) {
+    var json = encodeURIComponent(JSON.stringify(options));
+    if (returnTo === 'pebblejs://close#') {
+      // Real Pebble/Rebble app: the fragment after pebblejs://close is the response.
+      document.location = 'pebblejs://close#' + json;
+    } else {
+      // pypkjs emulator: the local server expects the JSON as a query parameter
+      // (return_to is appended with a trailing '?').
+      var sep = returnTo.indexOf('?') === -1 ? '?' : '';
+      document.location = returnTo + sep + json;
+    }
+  }
+
+  function save() {
+    var p = phone.value.trim();
+    var pi = pin.value.trim();
+    if (!p || !pi) {
+      status.textContent = 'Phone and PIN are required.';
+      status.className = 'status err';
+      return;
+    }
+    closeWith({ action: 'save', phone: p, pin: pi, demo: demo.checked });
+  }
+
+  document.getElementById('save').addEventListener('click', function (e) { e.preventDefault(); save(); });
+  document.getElementById('save2').addEventListener('click', function (e) { e.preventDefault(); closeWith({ action: 'save', phone: phone.value.trim(), pin: pin.value.trim(), demo: demo.checked }); });
+  document.getElementById('clear').addEventListener('click', function (e) { e.preventDefault(); closeWith({ action: 'clear' }); });
+})();
+</script>
+</body>
+</html>
